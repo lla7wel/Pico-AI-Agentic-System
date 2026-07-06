@@ -1,0 +1,16 @@
+# Secrets — never commit
+backend/.env
+firmware/pico_voice_agent/secrets.h
+
+# Python
+backend/.venv/
+__pycache__/
+*.pyc
+
+# Local data / audio
+*.wav
+conversations.db
+*.db
+
+# OS
+.DS_Store

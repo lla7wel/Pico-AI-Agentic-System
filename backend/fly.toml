@@ -1,0 +1,39 @@
+# Fly.io config for the Pico voice-agent backend.
+# Rename `app` if you like, then keep it in sync with DEPLOY.md.
+app = "pico-voice-agent"
+primary_region = "iad"   # pick the region nearest you / your Pico
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  SQLITE_PATH = "/data/conversations.db"
+  SAMPLE_RATE = "16000"
+  HISTORY_TURNS = "10"
+  MAX_RESPONSE_CHARS = "400"
+  CLAUDE_MODEL = "claude-haiku-4-5-20251001"
+
+# Persistent volume for the SQLite conversation DB (see DEPLOY.md to create it).
+[mounts]
+  source = "pico_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  # Always-on: a stopped machine would drop the Pico's live WebSocket and
+  # a cold start mid-conversation is jarring. Keep one machine warm.
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "10s"
+    method = "GET"
+    path = "/healthz"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"
