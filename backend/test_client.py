@@ -2,8 +2,9 @@
 """Local test harness that impersonates the Pico over the WebSocket.
 
 It streams a 16 kHz / 16-bit / mono WAV in ~512-byte PCM frames, exactly
-like the firmware will, so you can validate Deepgram -> Claude -> SQLite
-before any hardware exists.
+like the firmware will, so you can validate Deepgram -> OpenAI -> SQLite
+before any hardware exists. (Requires a device token — create one in the
+dashboard, then pass it with --token.)
 
 Usage:
     python test_client.py speech.wav

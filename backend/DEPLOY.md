@@ -1,80 +1,78 @@
-# Deploy the Pico Voice Agent backend to Fly.io
+# Deploy the Pico Agent Platform backend to Fly.io
+
+The backend is now configured at **runtime through the web dashboard** — API
+keys, model, prompt, device tokens, etc. are entered in the browser and stored
+in SQLite, not in env vars. Deployment just stands up the container + volume.
 
 ## 0. Prerequisites
-- A [Fly.io](https://fly.io) account and `flyctl` installed (`brew install flyctl`, then `fly auth login`).
-- Your `ANTHROPIC_API_KEY`, `DEEPGRAM_API_KEY`, and a chosen `PICO_AUTH_TOKEN`
-  (any strong random string — it must match `secrets.h` on the Pico).
+- A [Fly.io](https://fly.io) account and `flyctl` (`brew install flyctl`, then `fly auth login`).
+- Your OpenAI API key and Deepgram API key (entered later, in the dashboard).
 
-## 1. Test locally first (recommended)
+## 1. Run locally first (recommended)
 ```bash
 cd backend
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
-# Provide secrets for the local run:
-export ANTHROPIC_API_KEY=sk-ant-...
-export DEEPGRAM_API_KEY=...
-export PICO_AUTH_TOKEN=my-shared-secret
-export SQLITE_PATH=./conversations.db      # local file, not /data
+export SQLITE_PATH=./app.db      # local DB file
+export ADMIN_PASSWORD=admin      # first-run dashboard password (change later)
 
-uvicorn main:app --host 0.0.0.0 --port 8080
-
-# In another terminal, stream a WAV through the full pipeline:
-#   ffmpeg -i sample.m4a -ar 16000 -ac 1 -sample_fmt s16 speech.wav
-python test_client.py speech.wav
+uvicorn app.main:app --host 0.0.0.0 --port 8080
 ```
-You should see the transcript logged server-side and an `ASSISTANT` reply
-printed by the client. That proves Deepgram -> Claude -> SQLite works.
+Open http://localhost:8080, log in with the admin password, then:
+1. **Providers & Keys** → paste your OpenAI + Deepgram keys, pick a model,
+   click **Test** on each.
+2. **Devices** → add a device; copy the generated `DEVICE_ID` + `PICO_AUTH_TOKEN`
+   into the firmware `secrets.h`.
+3. **Behavior** → adjust the system prompt / response length if you like.
 
-## 2. Launch the app (creates it, does NOT deploy yet)
-`fly.toml` already exists, so decline when asked to overwrite it.
+Offline sanity check (no keys/network needed):
+```bash
+python test_flow_mock.py      # stubs OpenAI + Deepgram, exercises the whole flow
+```
+
+## 2. Launch the app (creates it, no deploy yet)
+`fly.toml` already exists; decline the overwrite prompt.
 ```bash
 cd backend
 fly launch --no-deploy --copy-config --name pico-voice-agent --region iad
 ```
-Pick a region near you; keep it consistent with `fly.toml`'s `primary_region`.
 
 ## 3. Create the persistent volume (holds the SQLite DB)
-Must match `[mounts].source` in `fly.toml` (`pico_data`) and the same region.
+Match `[mounts].source` in `fly.toml` (`pico_data`) and the same region.
 ```bash
 fly volumes create pico_data --region iad --size 1
 ```
 
-## 4. Set secrets (never commit these)
+## 4. Set the ONE bootstrap secret
+Only the first-run admin password is a Fly secret; everything else is set in
+the dashboard afterward.
 ```bash
-fly secrets set \
-  ANTHROPIC_API_KEY=sk-ant-... \
-  DEEPGRAM_API_KEY=... \
-  PICO_AUTH_TOKEN=my-shared-secret
+fly secrets set ADMIN_PASSWORD='choose-a-strong-password'
 ```
-`CLAUDE_MODEL`, `SQLITE_PATH`, etc. are non-secret and already in `fly.toml`.
 
 ## 5. Deploy
 ```bash
 fly deploy
 ```
 
-## 6. Verify
+## 6. Configure via the dashboard
 ```bash
-# Health check over HTTPS:
-curl https://pico-voice-agent.fly.dev/healthz      # -> {"status":"ok"}
+open https://pico-voice-agent.fly.dev/          # log in with ADMIN_PASSWORD
+```
+- Change the admin password (Config & Admin).
+- Enter OpenAI + Deepgram keys, choose the model, run both connection tests.
+- Create your device, copy its token into `secrets.h`, flash the Pico.
 
-# Full round trip over WSS against the deployed app:
-python test_client.py speech.wav \
-  --url wss://pico-voice-agent.fly.dev/ws/voice \
-  --token my-shared-secret
-```
-
-Your Pico's `secrets.h` then uses:
-```
-WS_HOST = "pico-voice-agent.fly.dev"
-WS_PORT = 443
-PICO_AUTH_TOKEN = "my-shared-secret"
-```
+Health check: `curl https://pico-voice-agent.fly.dev/healthz` → `{"status":"ok"}`.
 
 ## Notes
-- **Single machine on purpose.** SQLite + in-memory per-connection session
-  state assume one process (`min_machines_running = 1`, `--workers 1`).
-- **Deepgram bills per streamed second.** A stuck socket (missed `stop`)
-  keeps billing; watch usage during testing.
-- Logs: `fly logs`. SSH in: `fly ssh console`. The DB is at `/data/conversations.db`.
+- **Single machine on purpose** (`min_machines_running = 1`, `--workers 1`):
+  the SQLite store, settings cache, presence, and sessions assume one process.
+- **Secrets at rest.** Keys are stored in the SQLite DB on the Fly volume,
+  gated behind admin login + HTTPS and masked when read back. This is the
+  pragmatic personal-use tradeoff; the volume is not separately encrypted.
+- **Upgrading from v1?** Set `PICO_AUTH_TOKEN=<old token>` as a Fly secret once;
+  on first boot it seeds a `pico-01` device so an already-flashed Pico keeps
+  working. Remove it afterward and manage devices in the dashboard.
+- Logs: `fly logs`. The dashboard's Logs/Events tabs show app-level detail.

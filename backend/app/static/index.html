@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pico Agent Console</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Login -->
+  <div id="login">
+    <div class="box">
+      <h1>▚ AGENT CONSOLE</h1>
+      <div class="field">
+        <label>Admin password</label>
+        <input id="loginPw" type="password" autofocus />
+      </div>
+      <button class="btn" style="width:100%" onclick="doLogin()">CONNECT</button>
+      <div id="loginErr" class="err" style="margin-top:10px;"></div>
+    </div>
+  </div>
+
+  <!-- App -->
+  <div id="app" class="hidden">
+    <nav>
+      <div class="brand">▚ AGENT CONSOLE<small id="navStatus">connecting…</small></div>
+      <button data-tab="overview" class="active">Overview</button>
+      <button data-tab="providers">Providers &amp; Keys</button>
+      <button data-tab="behavior">Behavior</button>
+      <button data-tab="devices">Devices</button>
+      <button data-tab="conversations">Conversations</button>
+      <button data-tab="integrations">Integrations</button>
+      <button data-tab="logs">Logs</button>
+      <button data-tab="events">Events</button>
+      <button data-tab="config">Config &amp; Admin</button>
+      <div class="spacer"></div>
+      <div class="status-dot" id="onlineDot">● devices: –</div>
+      <button class="ghost btn small" style="margin:8px 10px;" onclick="logout()">Sign out</button>
+    </nav>
+
+    <main>
+      <!-- Overview -->
+      <section id="overview" class="tab active">
+        <h2>Overview</h2>
+        <div id="warnBanner"></div>
+        <div class="card"><h3>System</h3><div id="statusBody" class="muted">loading…</div></div>
+        <div class="card"><h3>Quick tests</h3>
+          <div class="row">
+            <button class="btn" onclick="testOpenAI()">Test OpenAI</button>
+            <button class="btn" onclick="testDeepgram()">Test Deepgram</button>
+          </div>
+          <div id="testOut" class="hint"></div>
+        </div>
+      </section>
+
+      <!-- Providers -->
+      <section id="providers" class="tab">
+        <h2>Providers &amp; Keys</h2>
+        <div class="card">
+          <h3>OpenAI (LLM brain)</h3>
+          <div class="field"><label>API key</label>
+            <input id="openai_api_key" type="password" placeholder="sk-… (leave blank to keep current)" />
+            <div class="hint" id="openai_hint"></div>
+          </div>
+          <div class="row">
+            <div class="field" style="flex:2"><label>Model</label>
+              <input id="openai_model" list="modelList" placeholder="gpt-4o-mini" />
+              <datalist id="modelList"></datalist>
+            </div>
+            <div class="field" style="flex:2"><label>Base URL (optional)</label>
+              <input id="openai_base_url" placeholder="blank = api.openai.com" />
+            </div>
+          </div>
+          <div class="row">
+            <button class="btn" onclick="saveProviders()">Save</button>
+            <button class="btn ghost" onclick="testOpenAI(true)">Test &amp; fetch models</button>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Deepgram (speech-to-text)</h3>
+          <div class="field"><label>API key</label>
+            <input id="deepgram_api_key" type="password" placeholder="… (leave blank to keep current)" />
+            <div class="hint" id="deepgram_hint"></div>
+          </div>
+          <div class="field" style="max-width:240px"><label>Model</label>
+            <input id="deepgram_model" placeholder="nova-3" />
+          </div>
+          <div class="row">
+            <button class="btn" onclick="saveProviders()">Save</button>
+            <button class="btn ghost" onclick="testDeepgram()">Test connection</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Behavior -->
+      <section id="behavior" class="tab">
+        <h2>Behavior</h2>
+        <div class="card">
+          <div class="field"><label>System prompt / personality</label>
+            <textarea id="system_prompt"></textarea>
+          </div>
+          <div class="row">
+            <div class="field"><label>Temperature</label><input id="temperature" type="number" step="0.1" min="0" max="2" /></div>
+            <div class="field"><label>Max tokens</label><input id="max_tokens" type="number" min="16" /></div>
+            <div class="field"><label>Max response chars (screen)</label><input id="max_response_chars" type="number" min="40" /></div>
+            <div class="field"><label>History turns (memory)</label><input id="history_turns" type="number" min="0" /></div>
+          </div>
+          <button class="btn" onclick="saveBehavior()">Save</button>
+        </div>
+      </section>
+
+      <!-- Devices -->
+      <section id="devices" class="tab">
+        <h2>Devices</h2>
+        <div class="card">
+          <h3>Add a Pico</h3>
+          <div class="row">
+            <div class="field"><label>Name</label><input id="dev_name" placeholder="Desk Pico" /></div>
+            <div class="field"><label>device_id (optional)</label><input id="dev_id" placeholder="pico-01" /></div>
+            <div class="field"><label>Wi-Fi SSID (reference)</label><input id="dev_wifi" placeholder="home-wifi" /></div>
+            <button class="btn" onclick="createDevice()">Generate token</button>
+          </div>
+          <div id="newTokenBox"></div>
+        </div>
+        <div class="card"><h3>Registered devices</h3><div id="devTable">loading…</div></div>
+      </section>
+
+      <!-- Conversations -->
+      <section id="conversations" class="tab">
+        <h2>Conversations</h2>
+        <div class="card">
+          <div class="row">
+            <div class="field"><label>Device filter</label>
+              <select id="conv_device"><option value="">All devices</option></select>
+            </div>
+            <button class="btn ghost" onclick="loadConversations()">Refresh</button>
+            <button class="btn danger" onclick="clearConversations()">Clear history</button>
+          </div>
+          <div id="convTable" class="mono-scroll" style="margin-top:10px;">loading…</div>
+        </div>
+      </section>
+
+      <!-- Integrations -->
+      <section id="integrations" class="tab">
+        <h2>Integrations &amp; Tools</h2>
+        <p class="muted">Integrations are off by default and never access anything until you enable and authorize them.</p>
+        <div class="card"><div id="intTable">loading…</div></div>
+      </section>
+
+      <!-- Logs -->
+      <section id="logs" class="tab">
+        <h2>Logs</h2>
+        <div class="card">
+          <div class="row">
+            <div class="field"><label>Level</label><select id="log_level"><option value="">any</option><option>info</option><option>warn</option><option>error</option></select></div>
+            <div class="field"><label>Category</label><input id="log_cat" placeholder="device / stt / llm…" /></div>
+            <label style="margin-bottom:12px;"><input type="checkbox" id="log_auto" style="width:auto" /> auto-refresh</label>
+            <button class="btn ghost" onclick="loadLogs()">Refresh</button>
+          </div>
+          <div id="logBody" class="mono-scroll">loading…</div>
+        </div>
+      </section>
+
+      <!-- Events -->
+      <section id="events" class="tab">
+        <h2>Events (durable)</h2>
+        <div class="card">
+          <div class="row">
+            <div class="field"><label>Level</label><select id="ev_level"><option value="">any</option><option>info</option><option>warn</option><option>error</option></select></div>
+            <button class="btn ghost" onclick="loadEvents()">Refresh</button>
+          </div>
+          <div id="evBody" class="mono-scroll">loading…</div>
+        </div>
+      </section>
+
+      <!-- Config & Admin -->
+      <section id="config" class="tab">
+        <h2>Config &amp; Admin</h2>
+        <div class="card">
+          <h3>Export / Import configuration</h3>
+          <label style="display:block;margin-bottom:8px;"><input type="checkbox" id="exp_secrets" style="width:auto" /> include secrets in export</label>
+          <div class="row">
+            <button class="btn" onclick="exportConfig()">Export JSON</button>
+            <button class="btn ghost" onclick="document.getElementById('impFile').click()">Import JSON</button>
+            <input id="impFile" type="file" accept="application/json" class="hidden" onchange="importConfig(event)" />
+          </div>
+        </div>
+        <div class="card">
+          <h3>Change admin password</h3>
+          <div class="field" style="max-width:320px"><label>New password (min 6)</label><input id="new_pw" type="password" /></div>
+          <button class="btn" onclick="changePassword()">Update password</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast"></div>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-# Fly.io config for the Pico voice-agent backend.
+# Fly.io config for the Pico agent-platform backend.
 # Rename `app` if you like, then keep it in sync with DEPLOY.md.
 app = "pico-voice-agent"
 primary_region = "iad"   # pick the region nearest you / your Pico
@@ -7,13 +7,11 @@ primary_region = "iad"   # pick the region nearest you / your Pico
   dockerfile = "Dockerfile"
 
 [env]
-  SQLITE_PATH = "/data/conversations.db"
-  SAMPLE_RATE = "16000"
-  HISTORY_TURNS = "10"
-  MAX_RESPONSE_CHARS = "400"
-  CLAUDE_MODEL = "claude-haiku-4-5-20251001"
+  # Almost all config is now runtime (dashboard) — only the DB path is env.
+  # API keys, model, prompt, etc. are set in the dashboard, not here.
+  SQLITE_PATH = "/data/app.db"
 
-# Persistent volume for the SQLite conversation DB (see DEPLOY.md to create it).
+# Persistent volume for the SQLite DB (settings, devices, history, events).
 [mounts]
   source = "pico_data"
   destination = "/data"
