@@ -1,9 +1,9 @@
-// pico_voice_agent.ino — Raspberry Pi Pico W retro voice agent (brief §6).
+// pico_voice_agent.ino — Raspberry Pi Pico W retro voice terminal.
 //
 // Push-to-talk: Button1 starts recording, press again to stop. Audio is
-// captured by the custom PIO I2S receiver, streamed live over WSS to the
-// Fly.io backend, transcribed + answered by Claude, and the reply is drawn
-// on the green-phosphor TFT. Nothing is stored on the device.
+// captured by the custom PIO I2S receiver, streamed live over WebSocket to
+// the backend, transcribed + answered there, and the reply is drawn on the
+// green-phosphor TFT. Nothing is stored on the device.
 //
 // Board settings (Arduino IDE): "Raspberry Pi Pico W", and set TFT_eSPI up
 // per firmware/README.md. See that README for libraries + bring-up order.
@@ -32,7 +32,8 @@ static bool s_haveResponse = false;
 static bool s_haveError = false;
 static char s_msgBuf[512];        // response text or error message
 
-// One static PCM chunk buffer, reused for every read (brief §6 memory rule).
+// One static PCM chunk buffer, reused for every read — the audio path never
+// allocates per-chunk.
 static int16_t s_pcm[PCM_CHUNK_SAMPLES];
 
 // ---- Button (active-low, press-to-toggle with debounce) ------------------
@@ -88,32 +89,49 @@ static void handleServerText(const char *payload) {
 static void wsEvent(WStype_t type, uint8_t *payload, size_t length) {
   switch (type) {
     case WStype_CONNECTED:
+      Serial.println("[WS] TCP/TLS connected, sending auth");
       s_wsConnected = true;
       s_authed = false;
       sendAuth();
       break;
     case WStype_DISCONNECTED:
+      Serial.println("[WS] disconnected");
       s_wsConnected = false;
       s_authed = false;
       break;
     case WStype_TEXT:
+      Serial.printf("[WS] <- %s\n", (const char *)payload);
       handleServerText((const char *)payload);
       break;
     case WStype_ERROR:
+      Serial.printf("[WS] error, len=%u\n", (unsigned)length);
       s_haveError = true;
       copyMsg("link error");
       break;
+    case WStype_PING:
+      Serial.println("[WS] ping");
+      break;
+    case WStype_PONG:
+      Serial.println("[WS] pong");
+      break;
     default:
+      Serial.printf("[WS] event type=%d\n", (int)type);
       break;
   }
 }
 
 // Pump the socket until authed or timeout; returns whether the link is ready.
 static bool wsConnectBlocking(uint32_t timeoutMs) {
+  Serial.printf("[WS] connecting to %s %s:%d%s\n",
+                WS_USE_TLS ? "wss://" : "ws://", WS_HOST, WS_PORT, WS_PATH);
+#if WS_USE_TLS
 #if USE_CA_PINNING
   ws.beginSslWithCA(WS_HOST, WS_PORT, WS_PATH, WS_CA_CERT);
 #else
   ws.beginSSL(WS_HOST, WS_PORT, WS_PATH);   // see README re: TLS verification
+#endif
+#else
+  ws.begin(WS_HOST, WS_PORT, WS_PATH);      // plaintext ws:// for local dev
 #endif
   ws.onEvent(wsEvent);
   ws.setReconnectInterval(3000);
@@ -124,6 +142,8 @@ static bool wsConnectBlocking(uint32_t timeoutMs) {
     if (s_wsConnected && s_authed) return true;
     delay(10);
   }
+  Serial.printf("[WS] connect timed out: wsConnected=%d authed=%d\n",
+                s_wsConnected, s_authed);
   return s_wsConnected && s_authed;
 }
 
@@ -135,7 +155,13 @@ static bool wifiConnect(uint32_t timeoutMs) {
   while (WiFi.status() != WL_CONNECTED && (int32_t)(end - millis()) > 0) {
     delay(200);
   }
-  return WiFi.status() == WL_CONNECTED;
+  bool ok = WiFi.status() == WL_CONNECTED;
+  if (ok) {
+    Serial.printf("[WIFI] connected, IP=%s\n", WiFi.localIP().toString().c_str());
+  } else {
+    Serial.printf("[WIFI] failed, status=%d\n", WiFi.status());
+  }
+  return ok;
 }
 
 // ---- State transitions ---------------------------------------------------
@@ -175,7 +201,7 @@ void setup() {
   display_begin();
 
   i2s_mic_begin();
-  bool mic_ok = true;             // validated separately via serial dump (§7.4)
+  bool mic_ok = true;             // validated separately via i2s_mic_debug_dump()
 
   bool wifi_ok = wifiConnect(15000);
   bool link_ok = wifi_ok && wsConnectBlocking(8000);

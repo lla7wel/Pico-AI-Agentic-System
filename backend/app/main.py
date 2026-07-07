@@ -1,6 +1,6 @@
 """FastAPI application assembly for the Pico agent platform.
 
-  /ws/voice   Pico-facing WebSocket (unchanged protocol)
+  /ws/voice   Pico-facing WebSocket
   /api/*      admin/dashboard REST API (auth-gated)
   /healthz    public health check
   /           the web dashboard (static SPA)

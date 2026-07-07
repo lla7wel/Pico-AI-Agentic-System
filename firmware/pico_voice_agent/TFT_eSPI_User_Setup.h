@@ -3,7 +3,7 @@
 // TFT_eSPI is configured at COMPILE TIME inside the library folder, not in the
 // sketch. Copy the contents below into TFT_eSPI's User_Setup.h (see
 // firmware/README.md for the exact file location and the alternative
-// User_Setup_Select.h approach). Pins match the 52Pi Breadboard Kit (brief §2).
+// User_Setup_Select.h approach). Pins match the 52Pi Breadboard Kit.
 
 #define ST7796_DRIVER          // ST7796SU1 controller
 

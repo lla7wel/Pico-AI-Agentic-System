@@ -35,7 +35,3 @@ def get(device_id: str) -> dict | None:
 
 def online_count() -> int:
     return sum(1 for s in _state.values() if s["connected"])
-
-
-def snapshot() -> dict[str, dict]:
-    return dict(_state)

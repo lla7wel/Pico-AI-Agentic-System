@@ -1,6 +1,6 @@
 // pico_i2s.pio.h — custom PIO I2S receiver for the direct-plugged SPH0645.
 //
-// WHY THIS EXISTS (brief §2, §6): the mic is soldered straight onto GP18..GP22
+// WHY THIS EXISTS: the mic is soldered straight onto GP18..GP22
 // in the breakout's physical pin order, so LRCLK(GP19) sits BEFORE BCLK(GP21)
 // with DOUT(GP20) between them. The stock arduino-pico I2S library requires
 // LRCLK == BCLK+1, which is impossible here. PIO doesn't care about pin

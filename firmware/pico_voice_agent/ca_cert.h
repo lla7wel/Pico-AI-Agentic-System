@@ -1,4 +1,4 @@
-// ca_cert.h — TLS trust configuration for the WSS link (brief §6).
+// ca_cert.h — TLS trust configuration for the WSS link.
 //
 // Fly.io serves a Let's Encrypt certificate, which chains to the ISRG Root X1
 // CA. Two options:
@@ -16,6 +16,14 @@
 // (download "ISRG Root X1", PEM). It is left blank here on purpose rather than
 // shipping a possibly-stale copy.
 #pragma once
+
+// Whether the link to WS_HOST:WS_PORT is TLS (wss://) or plaintext (ws://).
+// Fly.io (production) terminates TLS at 443 -> WS_USE_TLS 1.
+// A local dev backend (e.g. `uvicorn ... --port 8080`, no TLS) -> WS_USE_TLS 0.
+// Define this in secrets.h per-deployment; default to TLS if not set there.
+#ifndef WS_USE_TLS
+#define WS_USE_TLS 1
+#endif
 
 #define USE_CA_PINNING 0
 

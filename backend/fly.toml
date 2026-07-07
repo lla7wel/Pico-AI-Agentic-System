@@ -7,7 +7,7 @@ primary_region = "iad"   # pick the region nearest you / your Pico
   dockerfile = "Dockerfile"
 
 [env]
-  # Almost all config is now runtime (dashboard) — only the DB path is env.
+  # Almost all config is runtime (dashboard) — only the DB path is env.
   # API keys, model, prompt, etc. are set in the dashboard, not here.
   SQLITE_PATH = "/data/app.db"
 

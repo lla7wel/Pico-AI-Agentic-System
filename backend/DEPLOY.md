@@ -1,6 +1,6 @@
-# Deploy the Pico Agent Platform backend to Fly.io
+# Deploy the backend to Fly.io
 
-The backend is now configured at **runtime through the web dashboard** — API
+The backend is configured at **runtime through the web dashboard** — API
 keys, model, prompt, device tokens, etc. are entered in the browser and stored
 in SQLite, not in env vars. Deployment just stands up the container + volume.
 
@@ -11,13 +11,7 @@ in SQLite, not in env vars. Deployment just stands up the container + volume.
 ## 1. Run locally first (recommended)
 ```bash
 cd backend
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-
-export SQLITE_PATH=./app.db      # local DB file
-export ADMIN_PASSWORD=admin      # first-run dashboard password (change later)
-
-uvicorn app.main:app --host 0.0.0.0 --port 8080
+./run.sh          # creates the venv, installs deps, serves on :8080
 ```
 Open http://localhost:8080, log in with the admin password, then:
 1. **Providers & Keys** → paste your OpenAI + Deepgram keys, pick a model,
@@ -72,7 +66,8 @@ Health check: `curl https://pico-voice-agent.fly.dev/healthz` → `{"status":"ok
 - **Secrets at rest.** Keys are stored in the SQLite DB on the Fly volume,
   gated behind admin login + HTTPS and masked when read back. This is the
   pragmatic personal-use tradeoff; the volume is not separately encrypted.
-- **Upgrading from v1?** Set `PICO_AUTH_TOKEN=<old token>` as a Fly secret once;
-  on first boot it seeds a `pico-01` device so an already-flashed Pico keeps
-  working. Remove it afterward and manage devices in the dashboard.
+- **Already-flashed Pico?** If a device was flashed with a fixed token before
+  the backend existed, set `PICO_AUTH_TOKEN=<that token>` as a Fly secret once;
+  first boot seeds a `pico-01` device row so it keeps working. Remove the
+  secret afterward and manage devices in the dashboard.
 - Logs: `fly logs`. The dashboard's Logs/Events tabs show app-level detail.

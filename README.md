@@ -1,68 +1,179 @@
 # Pico W Voice Terminal + Agent Platform
 
-A personal agentic AI system. A Raspberry Pi Pico W is a **thin voice terminal**
-— it captures speech, streams it to the backend, and displays the reply on a
-green-phosphor CRT-style TFT. All the intelligence lives in the **backend**,
-which is an **agent platform** configured entirely through a web dashboard.
+A push-to-talk voice assistant built from a Raspberry Pi Pico W and a
+self-hosted agent backend.
+
+The Pico is a **thin terminal**: press the button, speak, and the answer is
+drawn on a green-phosphor CRT-style TFT. It captures audio with an I2S
+microphone, streams it over a WebSocket, and displays whatever text comes
+back — no keys, no memory, no agent logic on-device.
+
+All the intelligence lives in the **backend**: a FastAPI service that
+transcribes speech with Deepgram, generates replies with OpenAI (including
+tool-calling), and is configured entirely through a built-in web dashboard —
+API keys, model, system prompt, devices, logs, and history are all managed in
+the browser, with nothing hardcoded.
+
+## Architecture
 
 ```
-[Pico W: I/O only]                 [Backend: the brain / agent platform]
-  capture voice ──WSS/PCM──▶  Deepgram STT ─▶ OpenAI (LLM + tool-calling) ─▶ reply
-  show reply    ◀───text────                 │
-  status LED/buzzer                          ├─ runtime config in SQLite (no .env editing)
-                                             ├─ web dashboard: keys, model, prompt,
-                                             │   devices, logs, history, integrations
-                                             └─ permission-gated integrations (email,
-                                                 calendar, files, web) — off by default
+[Pico W — I/O only]                [Backend — FastAPI agent platform]
+                                   ┌────────────────────────────────────────┐
+ button ─▶ mic (PIO I2S)           │  /ws/voice   Deepgram STT ─▶ OpenAI LLM │
+   │            │                  │                 (+ gated tool calls)    │
+   │       16 kHz PCM ──── WSS ───▶│                        │                │
+   │                               │   reply text ◀─────────┘                │
+ TFT display ◀──── reply text ─────│                                         │
+ LED + buzzer                      │  /            web dashboard (SPA)       │
+                                   │  /api/*       admin REST API            │
+                                   │  SQLite       settings · devices ·      │
+                                   │               history · events          │
+                                   └────────────────────────────────────────┘
 ```
 
-The Pico stays a dumb terminal: no keys, no memory, no agent logic on-device.
-Everything is managed from the dashboard.
+- **STT:** Deepgram live streaming — the transcript is final by the time the
+  button is released.
+- **LLM:** OpenAI with function/tool-calling, behind a provider interface
+  ([`backend/app/llm/`](backend/app/llm/)) so other providers can be added.
+- **Tools:** safe built-ins are on by default; integration stubs (email,
+  calendar, reminders, files, web) are **off by default and require explicit
+  enable + authorize** in the dashboard before the model can use them.
+- **Config:** runtime settings live in SQLite ([`backend/app/settings_store.py`](backend/app/settings_store.py));
+  secrets are masked when read back and a blank field never overwrites a
+  stored key.
 
-## Repo layout
-- **[`backend/`](backend/)** — FastAPI agent platform: voice WebSocket + admin
-  API + dashboard SPA. Start with [`backend/DEPLOY.md`](backend/DEPLOY.md).
-- **[`firmware/`](firmware/)** — Arduino sketch for the Pico W. **Unchanged** by
-  the platform pivot; the only thing you touch is pasting a dashboard-generated
-  device token into `secrets.h`. See [`firmware/README.md`](firmware/README.md).
+## Repository structure
 
-## The dashboard
-Served at `/` by the backend (log in with the admin password). From there you:
-enter/update OpenAI + Deepgram keys · choose the OpenAI model · edit the system
-prompt · tune response length & behavior · manage device tokens · view
-conversation history (and clear it) · test OpenAI/Deepgram connectivity · watch
-logs & events · see device online/offline status · enable/authorize integrations
-· export/import config. **No source, `.env`, or config-file editing required.**
+```
+backend/                    FastAPI backend + web dashboard
+  app/
+    main.py                 app assembly and startup
+    routers/voice.py        Pico-facing WebSocket (auth, PCM stream, reply)
+    routers/admin.py        dashboard REST API
+    llm/                    LLM provider interface + OpenAI implementation
+    tools/                  tool registry, built-ins, gated integrations
+    stt.py                  Deepgram live streaming client
+    settings_store.py       runtime config in SQLite (secrets masked)
+    db.py                   SQLite schema + helpers
+    security.py             admin sessions + device token auth
+    static/                 the dashboard SPA (vanilla HTML/JS/CSS)
+  run.sh                    one-command local start
+  test_flow_mock.py         offline end-to-end test (no keys needed)
+  test_client.py            streams a WAV like a real Pico would
+  Dockerfile, fly.toml      Fly.io deployment
+  DEPLOY.md                 step-by-step Fly.io guide
+firmware/                   Arduino sketch for the Pico W
+  pico_voice_agent/         see firmware/README.md
+LICENSE                     MIT
+```
 
-## Architecture highlights
-- **LLM = OpenAI**, behind a provider interface (`app/llm/`) with function/
-  tool-calling support. Model is dashboard-configurable, never hardcoded.
-- **STT = Deepgram** streaming (kept — it finalizes the transcript by the time
-  the button is released), key pulled from settings at runtime.
-- **Runtime config store** (`app/settings_store.py`) in SQLite; secrets masked
-  on read, and a blank field never wipes a stored key.
-- **Tool/integration framework** (`app/tools/`): safe built-ins on by default;
-  email/calendar/reminders/files/web are scaffolded, **off by default, and
-  require explicit enable + authorize** before the model can use them. No unsafe
-  automatic access.
-- **Observability**: in-memory log tail + durable events table, device presence,
-  per-device conversation history — all surfaced in the dashboard.
-- **Pico protocol unchanged** — existing firmware works as-is.
+## Hardware requirements
 
-## Status
-- **Backend:** complete and verified offline — `backend/test_flow_mock.py`
-  passes (admin auth + password change, masked secrets, device token gating,
-  a full stubbed voice turn, persistence, presence, integration
-  enable/authorize gating, events/logs, config export with secret opt-in). The
-  dashboard was loaded in a browser and renders/works with no console errors.
-  Add real keys via the dashboard + `fly deploy` to go live.
-- **Firmware:** unchanged from the initial build (PIO I2S encodings machine-
-  verified; mic tuning + TLS still need on-hardware validation per
-  `firmware/README.md`). Only new step: paste the dashboard device token into
-  `secrets.h`.
+- **Raspberry Pi Pico W**
+- **52Pi Pico Breadboard Kit Plus** (provides the 480x320 ST7796 TFT,
+  buttons, WS2812 RGB LED, and passive buzzer)
+- **SPH0645 I2S microphone**, plugged directly into GP18–GP22
 
-## What you supply
-An OpenAI API key · a Deepgram API key · WiFi SSID/password (in `secrets.h`) ·
-a Fly.io account · an admin password for the dashboard. All entered via the
-dashboard except WiFi (compile-time on the Pico) and the bootstrap admin
-password.
+The full pin map is in
+[`firmware/pico_voice_agent/config.h`](firmware/pico_voice_agent/config.h).
+Different wiring or parts will require pin/driver changes.
+
+## Software requirements
+
+- **Python 3.11+** (backend)
+- **Arduino IDE 2.x** with the Earle Philhower **arduino-pico** core (firmware)
+- An **OpenAI API key** and a **Deepgram API key**
+- Optional: a **Fly.io** account for cloud deployment
+
+## Quick start
+
+**1. Clone and start the backend:**
+
+```bash
+git clone <this-repo>
+cd <this-repo>/backend
+./run.sh
+```
+
+`run.sh` creates a virtualenv, installs dependencies, and serves the
+dashboard at **http://localhost:8080**.
+
+**2. First-time setup (in the dashboard):**
+
+1. Log in with the default password `admin`; change it under
+   **Config & Admin**.
+2. **Providers & Keys** — paste your OpenAI and Deepgram API keys, pick a
+   model, and click **Test** on each.
+3. **Devices** — add a device. The dashboard shows a generated `DEVICE_ID` +
+   `PICO_AUTH_TOKEN` **once**, formatted for pasting into the firmware.
+4. Optional: tune the system prompt and response length under **Behavior**.
+
+**3. Flash the Pico:**
+
+```bash
+cd firmware/pico_voice_agent
+cp secrets.h.example secrets.h    # then fill in Wi-Fi + host + device token
+```
+
+Set `WS_USE_TLS 0` and your computer's LAN IP in `secrets.h` to talk to a
+local backend, or leave TLS on and use your Fly.io hostname. Then follow
+[`firmware/README.md`](firmware/README.md) for libraries, the one-time
+TFT_eSPI pin config, and the recommended bring-up order.
+
+**4. Talk to it.** Press Button 1, speak, press again. The reply draws on the
+TFT within a couple of seconds.
+
+### Verify without hardware
+
+```bash
+cd backend
+python test_flow_mock.py          # offline: stubs Deepgram + OpenAI, tests the whole flow
+python test_client.py speech.wav --token <device-token>   # streams a WAV like a Pico
+```
+
+## Deploying to Fly.io
+
+The backend runs anywhere a container runs; a step-by-step Fly.io guide
+(volume for SQLite, single always-on machine, one bootstrap secret) is in
+[`backend/DEPLOY.md`](backend/DEPLOY.md). After deploying, point the firmware
+at `wss://<your-app>.fly.dev` and reflash.
+
+## Dashboard usage
+
+Served at `/` by the backend. Tabs:
+
+| Tab | What it does |
+|---|---|
+| Overview | health summary, missing-key warnings, one-click provider tests |
+| Providers & Keys | OpenAI + Deepgram keys (masked once saved), model picker |
+| Behavior | system prompt, temperature, max tokens, response length, history depth |
+| Devices | create devices, copy the one-time token, rotate/delete, online status |
+| Conversations | per-device transcript history, clearable |
+| Integrations | enable/authorize tool access (off by default) |
+| Logs / Events | live log tail and durable event history |
+| Config & Admin | export/import config JSON, change the admin password |
+
+## Troubleshooting
+
+- **Pico shows `ERROR: NO WIFI`** — check `WIFI_SSID`/`WIFI_PASS` in
+  `secrets.h`; the Pico W is 2.4 GHz only.
+- **Pico shows `ERROR: NO SERVER LINK`** — mismatched TLS is the usual cause:
+  `WS_USE_TLS` must be `1` for Fly.io (port 443) and `0` for a plain local
+  `uvicorn`. Also confirm `WS_HOST`/`WS_PORT` and that the backend is
+  reachable from the Pico's network.
+- **`auth failed` in the dashboard Events tab** — the token in `secrets.h`
+  doesn't match any device; re-copy it or rotate the token and reflash.
+- **Replies are static/garbage transcripts** — validate the mic in isolation
+  with `i2s_mic_debug_dump()` and tune the sample-extraction knobs; see the
+  bring-up order in [`firmware/README.md`](firmware/README.md).
+- **White screen** — TFT_eSPI wasn't configured; copy
+  `TFT_eSPI_User_Setup.h` into the library as described in the firmware
+  README.
+- **"OpenAI/Deepgram key not set" errors** — keys are entered in the
+  dashboard (Providers & Keys), not in `.env`.
+- **Backend logs** — the dashboard's Logs/Events tabs show app-level detail;
+  on Fly.io, `fly logs`.
+
+## License
+
+[MIT](LICENSE)

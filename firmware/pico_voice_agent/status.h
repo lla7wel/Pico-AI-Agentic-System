@@ -1,4 +1,4 @@
-// status.h — RGB LED + buzzer status codes (brief §3).
+// status.h — RGB LED + buzzer status codes.
 #pragma once
 #include <Arduino.h>
 
@@ -14,8 +14,7 @@ enum StatusState {
 void status_begin();
 
 // Set the current visual state. Also fires the one-shot tone associated with
-// entering that state (start beep, stop beep, chime, error buzz) where the
-// brief specifies one.
+// entering that state (start beep, stop beep, chime, error buzz).
 void status_set(StatusState s);
 
 // Call frequently from the main loop to drive non-blocking blink animation.

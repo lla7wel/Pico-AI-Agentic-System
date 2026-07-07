@@ -2,7 +2,7 @@
 //
 // Memory: draws directly to the panel and uses only tiny scratch buffers.
 // No full-screen sprite is ever allocated (a 480x320x16bpp buffer would be
-// ~300 KB, larger than the RP2040's whole 264 KB SRAM — brief §6).
+// ~300 KB, larger than the RP2040's whole 264 KB SRAM).
 #include "config.h"
 #include "display.h"
 #include <TFT_eSPI.h>

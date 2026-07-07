@@ -11,7 +11,7 @@ void i2s_mic_begin();
 // are ready yet). Non-blocking — call it repeatedly in the record loop.
 size_t i2s_mic_read(int16_t *out, size_t max_samples);
 
-// Debug helper (brief §7 step 4): stream converted samples to Serial as
+// Debug helper for mic bring-up: stream converted samples to Serial as
 // signed decimals so you can eyeball a tone/clap before trusting the mic.
 // Blocks for `ms` milliseconds. Not used in the normal flow.
 void i2s_mic_debug_dump(uint32_t ms);

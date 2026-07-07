@@ -1,6 +1,6 @@
-// config.h — hardware pin map and tunables for the Pico W voice agent.
+// config.h — hardware pin map and tunables for the Pico W voice terminal.
 // Pin map is fixed by the 52Pi Pico Breadboard Kit Plus + direct-plugged
-// SPH0645 mic (see project brief §2). Do not change pins without rewiring.
+// SPH0645 mic. Do not change pins without rewiring.
 #pragma once
 
 // ---- TFT (ST7796SU1, 480x320, SPI0) --------------------------------------
@@ -20,16 +20,16 @@
 
 // ---- Controls ------------------------------------------------------------
 #define PIN_BUTTON1    15   // push-to-talk: press = start, press again = stop
-#define PIN_BUTTON2    14   // reserved (unused in v1)
+#define PIN_BUTTON2    14   // reserved for future use
 
 // ---- Status output -------------------------------------------------------
 #define PIN_WS2812     12   // single WS2812 RGB status LED
 #define PIN_BUZZER     13   // passive buzzer (tone())
 
-// ---- Audio format (must match backend config.py SAMPLE_RATE) -------------
+// ---- Audio format (must match the backend's sample_rate setting) ---------
 #define SAMPLE_RATE_HZ 16000
 // Streamed PCM chunk size in bytes. One static buffer of this size is
-// allocated once at boot and reused for every frame (brief §6 memory rules).
+// allocated once at boot and reused for every frame.
 #define PCM_CHUNK_BYTES 512          // 256 samples of 16-bit mono
 #define PCM_CHUNK_SAMPLES (PCM_CHUNK_BYTES / 2)
 

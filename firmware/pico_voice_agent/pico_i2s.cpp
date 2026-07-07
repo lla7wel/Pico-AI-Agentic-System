@@ -4,8 +4,8 @@
 //   mic --BCLK/DOUT/LRCLK--> PIO (pico_i2s.pio.h) --RX FIFO--> DMA --> ring[]
 //   consumer: i2s_mic_read() reads new words from ring[], converts to PCM16.
 //
-// Memory rule (brief §6): the ring buffer is a single static allocation made
-// once here; nothing in the audio path allocates per-chunk.
+// Memory rule: the ring buffer is a single static allocation made once here;
+// nothing in the audio path allocates per-chunk.
 #include "config.h"
 #include "pico_i2s.h"
 #include "pico_i2s.pio.h"
@@ -47,7 +47,7 @@ static inline uint dma_write_idx() {
 static void gpio_setup() {
   // Power the mic and hold LRCLK-select for mono (left) channel.
   pinMode(PIN_MIC_3V, OUTPUT);
-  digitalWrite(PIN_MIC_3V, HIGH);     // 3V — held HIGH forever (brief §2)
+  digitalWrite(PIN_MIC_3V, HIGH);     // 3V — held HIGH forever
   pinMode(PIN_MIC_SEL, OUTPUT);
   digitalWrite(PIN_MIC_SEL, LOW);     // SEL LOW — selects left/mono
   delay(10);                          // let the mic power up

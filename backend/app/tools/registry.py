@@ -5,9 +5,8 @@ State model per tool:
   authorized  — only meaningful when requires_auth; the permission grant
 
 Only tools that are enabled AND (not requires_auth OR authorized) are exposed
-to the LLM. Everything is off-by-default for integrations, so no external
-access happens until you explicitly enable + authorize it (brief: no unsafe
-automatic access).
+to the LLM. Integrations are off by default, so no external access happens
+until you explicitly enable + authorize them.
 """
 import logging
 

@@ -7,7 +7,7 @@ import re
 import secrets as _secrets
 import time
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query
+from fastapi import APIRouter, Body, Depends, Header, HTTPException, Query
 
 from .. import db, settings_store, presence, security, stt
 from .. import llm
@@ -32,9 +32,9 @@ async def login(body: dict = Body(...)):
 
 
 @router.post("/logout", dependencies=[admin])
-async def logout(authorization: str = ""):
-    # Token comes in the header; simplest is to let it expire, but honor an
-    # explicit logout of the presented token.
+async def logout(authorization: str = Header(default="")):
+    if authorization.lower().startswith("bearer "):
+        security.destroy_session(authorization[7:])
     return {"ok": True}
 
 

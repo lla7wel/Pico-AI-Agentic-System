@@ -3,14 +3,18 @@ backend/.env
 firmware/pico_voice_agent/secrets.h
 
 # Python
-backend/.venv/
+.venv/
 __pycache__/
 *.pyc
 
 # Local data / audio
-*.wav
-conversations.db
 *.db
+*.wav
+
+# Tooling / editors
+.claude/
+.vscode/
+.idea/
 
 # OS
 .DS_Store

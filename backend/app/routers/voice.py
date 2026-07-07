@@ -1,14 +1,11 @@
-"""Pico-facing voice WebSocket. Wire protocol is UNCHANGED from v1, so the
-existing firmware works without modification:
+"""Pico-facing voice WebSocket.
+
+Wire protocol (one turn):
 
   client -> {"type":"auth","token":...,"device_id":...}
   server -> {"type":"ready"} | {"type":"error",...}
   client -> {"type":"start"} , binary PCM frames..., {"type":"stop"}
   server -> {"type":"response","text":...} | {"type":"error",...}
-
-What changed underneath: the token is validated against the devices table,
-presence is tracked, transcripts/replies persist per device, OpenAI (not
-Anthropic) generates the reply, and everything is configured at runtime.
 """
 import json
 import logging
