@@ -1,0 +1,144 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 740" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">
+  <defs>
+    <style>
+      .board { fill: #161b22; stroke: #33ff66; stroke-width: 1.5; rx: 8; }
+      .comp  { fill: #10151b; stroke: #2ea043; stroke-width: 1.2; }
+      .title { fill: #33ff66; font-size: 20px; font-weight: bold; }
+      .name  { fill: #33ff66; font-size: 14px; font-weight: bold; }
+      .sub   { fill: #7d8590; font-size: 11px; }
+      .pin   { fill: #e6edf3; font-size: 11px; }
+      .plabel{ fill: #7d8590; font-size: 10px; }
+      .wire  { fill: none; stroke-width: 1.6; }
+      .w-spi { stroke: #58a6ff; }
+      .w-i2s { stroke: #d29922; }
+      .w-gpio{ stroke: #8957e5; }
+      .w-pwr { stroke: #f85149; }
+      .w-gnd { stroke: #7d8590; stroke-dasharray: 5 3; }
+      .leg   { fill: #e6edf3; font-size: 11px; }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="980" height="740" fill="#0d1117"/>
+  <text x="490" y="34" text-anchor="middle" class="title">Pico W Voice Terminal — Wiring Diagram</text>
+
+  <!-- ============ Raspberry Pi Pico W (center) ============ -->
+  <rect x="392" y="80" width="196" height="580" class="board" rx="10"/>
+  <text x="490" y="106" text-anchor="middle" class="name">Raspberry Pi</text>
+  <text x="490" y="124" text-anchor="middle" class="name">Pico W</text>
+  <text x="490" y="142" text-anchor="middle" class="sub">RP2040 · 264 KB SRAM · Wi-Fi</text>
+  <text x="490" y="652" text-anchor="middle" class="sub">USB 5V in</text>
+
+  <!-- left pins (TFT + power) -->
+  <g text-anchor="start">
+    <text x="400" y="204" class="pin">GP2</text>
+    <text x="400" y="234" class="pin">GP3</text>
+    <text x="400" y="264" class="pin">GP5</text>
+    <text x="400" y="294" class="pin">GP6</text>
+    <text x="400" y="324" class="pin">GP7</text>
+    <text x="400" y="374" class="pin">3V3</text>
+    <text x="400" y="404" class="pin">GND</text>
+  </g>
+
+  <!-- right pins (mic, buttons, LED, buzzer) -->
+  <g text-anchor="end">
+    <text x="580" y="204" class="pin">GP18</text>
+    <text x="580" y="234" class="pin">GP19</text>
+    <text x="580" y="264" class="pin">GP20</text>
+    <text x="580" y="294" class="pin">GP21</text>
+    <text x="580" y="324" class="pin">GP22</text>
+    <text x="580" y="404" class="pin">GP15</text>
+    <text x="580" y="434" class="pin">GP14</text>
+    <text x="580" y="494" class="pin">GP12</text>
+    <text x="580" y="564" class="pin">GP13</text>
+    <text x="580" y="614" class="pin">GND</text>
+  </g>
+
+  <!-- ============ TFT (left) ============ -->
+  <rect x="60" y="160" width="230" height="290" class="comp" rx="8"/>
+  <text x="175" y="186" text-anchor="middle" class="name">4" TFT 480x320</text>
+  <text x="175" y="203" text-anchor="middle" class="sub">ST7796 · SPI0 @ 40 MHz</text>
+  <g text-anchor="end">
+    <text x="282" y="234" class="pin">SCK</text>
+    <text x="282" y="264" class="pin">MOSI</text>
+    <text x="282" y="294" class="pin">CS</text>
+    <text x="282" y="324" class="pin">DC</text>
+    <text x="282" y="354" class="pin">RST</text>
+    <text x="282" y="384" class="pin">VCC+LED</text>
+    <text x="282" y="414" class="pin">GND</text>
+  </g>
+  <!-- TFT wires -->
+  <path class="wire w-spi" d="M290 230 H340 V200 H392"/>
+  <path class="wire w-spi" d="M290 260 H350 V230 H392"/>
+  <path class="wire w-spi" d="M290 290 H360 V260 H392"/>
+  <path class="wire w-spi" d="M290 320 H360 V290 H392"/>
+  <path class="wire w-spi" d="M290 350 H350 V320 H392"/>
+  <path class="wire w-pwr" d="M290 380 H340 V370 H392"/>
+  <path class="wire w-gnd" d="M290 410 H340 V400 H392"/>
+
+  <!-- ============ SPH0645 mic (right top) ============ -->
+  <rect x="700" y="150" width="230" height="230" class="comp" rx="8"/>
+  <text x="815" y="176" text-anchor="middle" class="name">SPH0645 I2S Mic</text>
+  <text x="815" y="193" text-anchor="middle" class="sub">custom PIO receiver + DMA ring</text>
+  <g text-anchor="start">
+    <text x="708" y="224" class="pin">SEL</text>
+    <text x="708" y="254" class="pin">LRCL</text>
+    <text x="708" y="284" class="pin">DOUT</text>
+    <text x="708" y="314" class="pin">BCLK</text>
+    <text x="708" y="344" class="pin">3V</text>
+  </g>
+  <g text-anchor="end">
+    <text x="922" y="224" class="plabel">held LOW = mono</text>
+    <text x="922" y="254" class="plabel">PIO SET out</text>
+    <text x="922" y="284" class="plabel">PIO IN</text>
+    <text x="922" y="314" class="plabel">PIO side-set out</text>
+    <text x="922" y="344" class="plabel">powered from GPIO</text>
+  </g>
+  <!-- mic wires -->
+  <path class="wire w-i2s" d="M588 200 H640 V220 H700"/>
+  <path class="wire w-i2s" d="M588 230 H648 V250 H700"/>
+  <path class="wire w-i2s" d="M588 260 H656 V280 H700"/>
+  <path class="wire w-i2s" d="M588 290 H648 V310 H700"/>
+  <path class="wire w-pwr" d="M588 320 H640 V340 H700"/>
+
+  <!-- ============ Buttons (right middle) ============ -->
+  <rect x="700" y="400" width="230" height="90" class="comp" rx="8"/>
+  <text x="815" y="424" text-anchor="middle" class="name">Push Buttons</text>
+  <g text-anchor="start">
+    <text x="708" y="448" class="pin">BTN1 — push-to-talk</text>
+    <text x="708" y="474" class="pin">BTN2 — reserved</text>
+  </g>
+  <text x="922" y="448" text-anchor="end" class="plabel">→ GND</text>
+  <text x="922" y="474" text-anchor="end" class="plabel">→ GND</text>
+  <path class="wire w-gpio" d="M588 400 H648 V444 H700"/>
+  <path class="wire w-gpio" d="M588 430 H640 V470 H700"/>
+
+  <!-- ============ LED (right lower) ============ -->
+  <rect x="700" y="510" width="230" height="64" class="comp" rx="8"/>
+  <text x="815" y="534" text-anchor="middle" class="name">WS2812 RGB LED</text>
+  <text x="815" y="554" text-anchor="middle" class="sub">DIN · status colors</text>
+  <path class="wire w-gpio" d="M588 490 H640 V542 H700"/>
+
+  <!-- ============ Buzzer (right bottom) ============ -->
+  <rect x="700" y="594" width="230" height="64" class="comp" rx="8"/>
+  <text x="815" y="618" text-anchor="middle" class="name">Passive Buzzer</text>
+  <text x="815" y="638" text-anchor="middle" class="sub">tone() · beeps + chime</text>
+  <path class="wire w-gpio" d="M588 560 H648 V626 H700"/>
+  <path class="wire w-gnd" d="M588 610 H628 V642 H700"/>
+  <text x="632" y="606" class="plabel">common GND</text>
+
+  <!-- ============ Legend ============ -->
+  <g transform="translate(60, 510)">
+    <rect x="0" y="0" width="230" height="150" class="comp" rx="8"/>
+    <text x="115" y="24" text-anchor="middle" class="name">Legend</text>
+    <line x1="16" y1="44" x2="56" y2="44" class="wire w-spi"/>
+    <text x="66" y="48" class="leg">SPI (display)</text>
+    <line x1="16" y1="68" x2="56" y2="68" class="wire w-i2s"/>
+    <text x="66" y="72" class="leg">I2S (microphone)</text>
+    <line x1="16" y1="92" x2="56" y2="92" class="wire w-gpio"/>
+    <text x="66" y="96" class="leg">GPIO (input/output)</text>
+    <line x1="16" y1="116" x2="56" y2="116" class="wire w-pwr"/>
+    <text x="66" y="120" class="leg">Power (3V3)</text>
+    <line x1="16" y1="138" x2="56" y2="138" class="wire w-gnd"/>
+    <text x="66" y="142" class="leg">Ground</text>
+  </g>
+</svg>

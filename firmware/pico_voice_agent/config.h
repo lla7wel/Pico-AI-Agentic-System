@@ -1,6 +1,6 @@
 // config.h — hardware pin map and tunables for the Pico W voice terminal.
-// Pin map is fixed by the 52Pi Pico Breadboard Kit Plus + direct-plugged
-// SPH0645 mic. Do not change pins without rewiring.
+// The pin map matches the hand-wired build documented in docs/HARDWARE.md.
+// Do not change pins without rewiring.
 #pragma once
 
 // ---- TFT (ST7796SU1, 480x320, SPI0) --------------------------------------

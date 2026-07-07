@@ -64,19 +64,30 @@ backend/                    FastAPI backend + web dashboard
   DEPLOY.md                 step-by-step Fly.io guide
 firmware/                   Arduino sketch for the Pico W
   pico_voice_agent/         see firmware/README.md
+docs/
+  HARDWARE.md               bill of materials, wiring, design notes
+  SHOWCASE.md               photo-documented product walkthrough
+  images/                   wiring diagram + build photos
 LICENSE                     MIT
 ```
 
-## Hardware requirements
+## Hardware
 
-- **Raspberry Pi Pico W**
-- **52Pi Pico Breadboard Kit Plus** (provides the 480x320 ST7796 TFT,
-  buttons, WS2812 RGB LED, and passive buzzer)
-- **SPH0645 I2S microphone**, plugged directly into GP18–GP22
+Hand-wired on a breadboard — no custom PCB or prebuilt carrier:
 
-The full pin map is in
+- **Raspberry Pi Pico W** (RP2040 + Wi-Fi)
+- **4" 480x320 TFT** (ST7796, SPI)
+- **SPH0645 I2S MEMS microphone** (driven by a custom PIO receiver)
+- **2x momentary push buttons** (push-to-talk + one reserved)
+- **WS2812 RGB LED** and a **passive buzzer** for status feedback
+
+The full bill of materials, wiring diagram, and design notes are in
+[`docs/HARDWARE.md`](docs/HARDWARE.md); the pin map lives in
 [`firmware/pico_voice_agent/config.h`](firmware/pico_voice_agent/config.h).
-Different wiring or parts will require pin/driver changes.
+A photo-documented build walkthrough is in
+[`docs/SHOWCASE.md`](docs/SHOWCASE.md).
+
+![Wiring diagram](docs/images/wiring-diagram.svg)
 
 ## Software requirements
 
