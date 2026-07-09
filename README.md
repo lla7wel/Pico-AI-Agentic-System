@@ -14,6 +14,10 @@ tool-calling), and is configured entirely through a built-in web dashboard —
 API keys, model, system prompt, devices, logs, and history are all managed in
 the browser, with nothing hardcoded.
 
+![The terminal answering a question](docs/images/hero.jpg)
+
+More photos and a full product walkthrough: [docs/SHOWCASE.md](docs/SHOWCASE.md).
+
 ## Architecture
 
 ```

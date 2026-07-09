@@ -4,9 +4,7 @@
 > custom PIO audio capture, and a self-hosted agent backend managed entirely
 > from a web dashboard.
 
-<!-- HERO SHOT: the finished device on a desk, screen showing a reply,
-     LED lit. This is the first thing people see — make it count. -->
-![The finished terminal](images/hero.jpg)
+![The finished terminal answering a question](images/hero.jpg)
 
 ---
 
@@ -37,13 +35,19 @@ no custom PCB. Full wiring and part list in [HARDWARE.md](HARDWARE.md).
 
 ![Wiring diagram](images/wiring-diagram.svg)
 
-<!-- BUILD PHOTOS: 2-3 shots —
-     1) full breadboard from above, wiring visible
-     2) close-up of the SPH0645 mic on GP18-GP22
-     3) back/side of the TFT connections -->
-![Breadboard, top view](images/build-overview.jpg)
+<!-- BUILD PHOTOS (to add): save into docs/images/ and uncomment —
+     1) build-overview.jpg — full board from above, wiring visible
+     2) build-mic.jpg — close-up of the SPH0645 mic on GP18-GP22
+     3) build-display.jpg — back/side of the TFT connections
+![Board, top view](images/build-overview.jpg)
 ![SPH0645 microphone wiring](images/build-mic.jpg)
 ![Display wiring](images/build-display.jpg)
+-->
+
+The build, mid-conversation — Pico W top left, SPH0645 mic centre,
+joystick/buttons and the RGB status LED below the panel:
+
+![The build, powered on](images/screen-ready.jpg)
 
 ### The interesting engineering bits
 
@@ -66,13 +70,18 @@ no custom PCB. Full wiring and part list in [HARDWARE.md](HARDWARE.md).
 
 ## The interface
 
-<!-- STATE PHOTOS: the four screen states —
-     boot sequence, READY prompt with blinking cursor,
-     LISTENING with dots, a real word-wrapped response -->
+The retro boot sequence reports each subsystem honestly — display, mic,
+Wi-Fi, and the backend link:
+
 ![Boot sequence](images/screen-boot.jpg)
-![Ready prompt](images/screen-ready.jpg)
+
+Recording, with the LED solid red and the animated ellipsis ticking:
+
 ![Listening](images/screen-listening.jpg)
-![A reply](images/screen-response.jpg)
+
+And a real, word-wrapped answer:
+
+![A reply](images/hero.jpg)
 
 Every state is also visible without reading the screen:
 
@@ -93,10 +102,12 @@ the browser, nothing in config files: API keys (masked once saved), model
 selection, the assistant's personality, device tokens, live logs, and
 per-device conversation history.
 
-<!-- DASHBOARD SCREENSHOTS: Overview tab and Devices tab
-     (the token-generation flow is the money shot) -->
+<!-- DASHBOARD SCREENSHOTS (to add): save into docs/images/ and uncomment —
+     dash-overview.png — Overview tab; dash-devices.png — Devices tab
+     (the token-generation flow is the money shot)
 ![Dashboard — overview](images/dash-overview.png)
 ![Dashboard — device provisioning](images/dash-devices.png)
+-->
 
 Devices are provisioned like real fleet hardware: the dashboard generates a
 device ID + auth token, shows the token exactly once formatted for pasting
