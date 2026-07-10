@@ -18,6 +18,10 @@ the browser, with nothing hardcoded.
 
 More photos and a full product walkthrough: [docs/SHOWCASE.md](docs/SHOWCASE.md).
 
+> The backend is also published as a standalone platform —
+> [voice-agent-control-plane](https://github.com/lla7wel/voice-agent-control-plane) —
+> with a documented device protocol and a simulated device, so it runs with no hardware.
+
 ## Architecture
 
 ```
