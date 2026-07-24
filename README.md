@@ -1,5 +1,7 @@
 # Pico W Voice Terminal + Agent Platform
 
+**Portfolio case study:** [hardware, firmware, control plane, and verification](https://www.mohamedelbahlool.com/en/work/pico-voice-terminal/)
+
 A push-to-talk voice assistant built from a Raspberry Pi Pico W and a
 self-hosted agent backend.
 
